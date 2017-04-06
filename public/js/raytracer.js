@@ -1,5 +1,11 @@
 function onload() {
-    draw();
+    fetch('data/test.txt')
+        .then(function(response) {
+        return response.text();
+    })
+    .then(function(tsdf) {
+        console.log(tsdf);
+    });
 }
 
 function draw() {
