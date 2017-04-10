@@ -4,9 +4,9 @@ const app = express()
 app.use('/static', express.static('public'))
 
 app.get('/static/data/samuel-64.tsdf', function (req, res) {
-    console.log("hi");
     res.setHeader("Content-Encoding", "gzip");
     res.sendFile('public/data/samuel-64.tsdf.gz', {root: "."});
+    //res.sendFile('public/data/samuel-64.tsdf', {root: "."});
 });
 app.get('/static/data/test.txt', function (req, res) {
     console.log(req.headers);

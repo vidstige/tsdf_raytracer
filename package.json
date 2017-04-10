@@ -4,6 +4,7 @@
   "description": "TSDF Raytracer in JS",
   "main": "index.js",
   "scripts": {
+    "start": "node_modules/.bin/nodemon",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
