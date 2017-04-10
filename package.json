@@ -4,15 +4,18 @@
   "description": "TSDF Raytracer in JS",
   "main": "index.js",
   "scripts": {
+    "build": "./node_modules/.bin/webpack",
     "start": "node_modules/.bin/nodemon",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.15.2"
+    "express": "^4.15.2",
+    "vector": "0.0.4"
   },
   "devDependencies": {
-    "nodemon": "^1.11.0"
+    "nodemon": "^1.11.0",
+    "webpack": "^2.3.3"
   }
 }
