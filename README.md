@@ -4,7 +4,7 @@
 * Loads TSDF volume
 * Renders TSDF volume using ray tracing
 
-![Sample render](/screenshots/1.png?raw=true "Sample render")
+![Sample render](/screenshots/2.gif?raw=true "Sample render")
 
 ## How to run
 1. `npm install`
