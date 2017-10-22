@@ -290,7 +290,7 @@ function render(tsdf, camera) {
     }
 
     console.time("raytrace");
-    render_depth(tsdf, camera.pose, scaleCamera(camera.K, vec2.fromValues(640, 480), render_size), depth, render_size[0], render_size[1]);
+    render_depth(tsdf, camera.pose, scaleCamera(camera.K, camera.K.resolution, render_size), depth, render_size[0], render_size[1]);
     console.timeEnd("raytrace");
 
     if (!img) {
