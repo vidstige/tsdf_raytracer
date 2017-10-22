@@ -26,7 +26,7 @@ function Camera(K) {
             0, 0, 0, 1);
         var t = mat4.fromTranslation(mat4.create(), eye);
         mat4.multiply(thiz.pose, t, R);
-    }
+    };
 }
 
 // Camera stuff
@@ -70,91 +70,93 @@ function autoSpin(K, center, up, renderer, a) {
     setTimeout(autoSpin, 10, K, center, up, renderer, a + 0.05);
 }
 
-var cache;
-function render_depth(tsdf, pose, K, depth, width, height)
-{
-    var K_inv = mat3.create();
-    mat3.invert(K_inv, K);
 
-    var rotation = mat3.fromMat4(mat3.create(), pose);
-    var pose_translation = mat4.getTranslation(vec3.create(), pose);
+function Raytracer() {
+    var cache;
+    this.render_depth = function(tsdf, pose, K, depth, width, height)
+    {
+        var K_inv = mat3.create();
+        mat3.invert(K_inv, K);
 
-    //console.log("correct tranalation", vec3.fromValues(0.5, -0.1, 0.5));
-    //console.log("correct rotation", mat3.fromValues(1, 0, 0, 0, 0, -1, 0, 1, 0))
+        var rotation = mat3.fromMat4(mat3.create(), pose);
+        var pose_translation = mat4.getTranslation(vec3.create(), pose);
 
-    var pre = mat3.create();
-    mat3.mul(pre, rotation, K_inv);
-    
-    // TODO: select min element intead of x
-    var voxel_length = vec3.divide(vec3.create(), tsdf.size, tsdf.resolution)[0];
+        //console.log("correct tranalation", vec3.fromValues(0.5, -0.1, 0.5));
+        //console.log("correct rotation", mat3.fromValues(1, 0, 0, 0, 0, -1, 0, 1, 0))
 
-    // create normalized per pixel ray directions cache
-    if (!cache) {
+        var pre = mat3.create();
+        mat3.mul(pre, rotation, K_inv);
+        
+        // TODO: select min element intead of x
+        var voxel_length = vec3.divide(vec3.create(), tsdf.size, tsdf.resolution)[0];
+
+        // create normalized per pixel ray directions cache
+        if (!cache) {
+            var c = 0;
+            console.log("Creating cache");
+            cache = [];
+            for (var y = 0; y < height; y++)
+            {
+                for (var x = 0; x < width; x++)
+                {
+                    var d = vec3.transformMat3(vec3.create(), vec3.fromValues(x, y, 1), K_inv);
+                    //var d = vec3.fromValues(x, y, 1);
+                    vec3.normalize(d, d);
+                    cache[c] = d;
+                    c++;
+                }
+            }
+        }
+
+        if (!tsdf.world_to_lattice) {
+            tsdf.world_to_lattice = vec3.divide(vec3.create(), tsdf.resolution, tsdf.size);
+        }
+
         var c = 0;
-        console.log("Creating cache");
-        cache = [];
+        var d = vec3.create();
+        var steps = [];
         for (var y = 0; y < height; y++)
         {
             for (var x = 0; x < width; x++)
             {
-                var d = vec3.transformMat3(vec3.create(), vec3.fromValues(x, y, 1), K_inv);
-                //var d = vec3.fromValues(x, y, 1);
-                vec3.normalize(d, d);
-                cache[c] = d;
+                var n = 0;
+                vec3.transformMat3(d, cache[c], rotation);
+                var p = vec3.clone(pose_translation);
+                var intersection = tsdf.intersect(p, d);
+                if (intersection) {
+                    var k = intersection.near;
+                    var dist = 0;
+                    do {
+                        k += Math.max(voxel_length, dist);
+                        vec3.scaleAndAdd(p, pose_translation, d, k);
+                        if (!tsdf.inside(p)) {
+                            break;
+                        }
+                        dist = tsdf.distance(tsdf.idx(p));
+                        n++;
+                    } while (dist > 0);
+                    depth[c] = k;
+                    steps[c] = n;
+                } else {
+                    depth[c] = 0;
+                    steps[c] = 0;
+                }
+                
                 c++;
             }
         }
-    }
-
-    if (!tsdf.world_to_lattice) {
-        tsdf.world_to_lattice = vec3.divide(vec3.create(), tsdf.resolution, tsdf.size);
-    }
-
-    var c = 0;
-    var d = vec3.create();
-    var steps = [];
-    for (var y = 0; y < height; y++)
-    {
-        for (var x = 0; x < width; x++)
-        {
-            var n = 0;
-            vec3.transformMat3(d, cache[c], rotation);
-            var p = vec3.clone(pose_translation);
-            var intersection = tsdf.intersect(p, d);
-            if (intersection) {
-                var k = intersection.near;
-                var dist = 0;
-                do {
-                    k += Math.max(voxel_length, dist);
-                    vec3.scaleAndAdd(p, pose_translation, d, k);
-                    if (!tsdf.inside(p)) {
-                        break;
-                    }
-                    dist = tsdf.distance(tsdf.idx(p));
-                    n++;
-                } while (dist > 0);
-                depth[c] = k;
-                steps[c] = n;
-            } else {
-                depth[c] = 0;
-                steps[c] = 0;
-            }
-            
-            c++;
+        /*var sum = 0;
+        for (var i = 0; i < steps.length; i++) {
+            sum += steps[i];
         }
-    }
-    /*var sum = 0;
-    for (var i = 0; i < steps.length; i++) {
-        sum += steps[i];
-    }
-    console.log("Average steps " + sum/steps.length);
-    var min = Math.min.apply(null, steps),
-        max = Math.max.apply(null, steps);
-    console.log("max: " + max);
-    console.log("min: " + min);*/
+        console.log("Average steps " + sum/steps.length);
+        var min = Math.min.apply(null, steps),
+            max = Math.max.apply(null, steps);
+        console.log("max: " + max);
+        console.log("min: " + min);*/
 
+    };
 }
-
 
 /*
 void RayTracer::depthToGray(const float* depth, int width, int height, unsigned short* output)
@@ -212,6 +214,7 @@ function scaleCamera(K, oldSize, newSize) {
 
 var img;
 var depth;
+var raytracer = new Raytracer();
 function render(tsdf, camera) {
         var canvas = document.getElementById('canvas');
     var ctx = canvas.getContext('2d');
@@ -222,7 +225,7 @@ function render(tsdf, camera) {
     }
 
     console.time("raytrace");
-    render_depth(tsdf, camera.pose, scaleCamera(camera.K, camera.K.resolution, render_size), depth, render_size[0], render_size[1]);
+    raytracer.render_depth(tsdf, camera.pose, scaleCamera(camera.K, camera.K.resolution, render_size), depth, render_size[0], render_size[1]);
     console.timeEnd("raytrace");
 
     if (!img) {
