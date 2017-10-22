@@ -110,30 +110,6 @@ function autoSpin(center, up, renderer, a) {
     setTimeout(autoSpin, 10, center, up, renderer, a + 0.05);
 }
 
-function start_here() {
-    fetch('data/samuel-64.tsdf')
-        .then(function(response) {
-        return response.arrayBuffer();
-    })
-    .then(function(raw_data) {
-        var tsdf = loadTsdf(raw_data);
-
-        var canvas = document.getElementById('canvas');
-        var center = vec3.multiply(vec3.create(), tsdf.size, vec3.fromValues(0.5, 0.5, 0.5));
-        var up = vec3.fromValues(0, 0, 1);
-
-        //attachCamera(canvas, center, up, function(pose) { render(tsdf, pose); });
-        console.log("autospin");
-        autoSpin(center, up, function(pose) { render(tsdf, pose); });
-        
-        window.onhashchange = function () {
-            console.log(window.location.hash);
-        }
-    });
-}
-window.onload = start_here;
-
-
 // Returns distance to surface at specified indices
 function distance_multiply(tsdf, indices)
 {
@@ -395,3 +371,5 @@ function render(tsdf, pose) {
     // var image = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");  // here is the most important part because if you dont replace you will get a DOM 18 exception.
     // window.location.href = image; // it will save locally
 }
+
+module.exports = {loadTsdf, autoSpin, render};
