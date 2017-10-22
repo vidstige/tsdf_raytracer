@@ -68,8 +68,11 @@ function autoSpin(camera, center, up, render, a) {
     setTimeout(autoSpin, 10, camera, center, up, render, a + 0.05);
 }
 
+
+
 function Raytracer() {
     var cache;
+
     this.render_depth = function(tsdf, pose, K, depth, width, height)
     {
         var K_inv = mat3.create();
@@ -109,9 +112,28 @@ function Raytracer() {
             tsdf.world_to_lattice = vec3.divide(vec3.create(), tsdf.resolution, tsdf.size);
         }
 
+        // Traces ray (origin: p, direction: d) and returns distance to sign
+        function trace(tsdf, p, d) {
+            var intersection = tsdf.intersect(p, d);
+            if (intersection) {
+                var k = intersection.near;
+                var dist = 0;
+                do {
+                    k += Math.max(voxel_length, dist);
+                    vec3.scaleAndAdd(p, pose_translation, d, k);
+                    if (!tsdf.inside(p)) {
+                        break;
+                    }
+                    dist = tsdf.distance(tsdf.idx(p));
+                    n++;
+                } while (dist > 0);
+                return k;
+            }
+            return 0;
+        }
+
         var c = 0;
         var d = vec3.create();
-        var steps = [];
         for (var y = 0; y < height; y++)
         {
             for (var x = 0; x < width; x++)
@@ -119,39 +141,10 @@ function Raytracer() {
                 var n = 0;
                 vec3.transformMat3(d, cache[c], rotation);
                 var p = vec3.clone(pose_translation);
-                var intersection = tsdf.intersect(p, d);
-                if (intersection) {
-                    var k = intersection.near;
-                    var dist = 0;
-                    do {
-                        k += Math.max(voxel_length, dist);
-                        vec3.scaleAndAdd(p, pose_translation, d, k);
-                        if (!tsdf.inside(p)) {
-                            break;
-                        }
-                        dist = tsdf.distance(tsdf.idx(p));
-                        n++;
-                    } while (dist > 0);
-                    depth[c] = k;
-                    steps[c] = n;
-                } else {
-                    depth[c] = 0;
-                    steps[c] = 0;
-                }
-                
+                depth[c] = trace(tsdf, p, d)
                 c++;
             }
         }
-        /*var sum = 0;
-        for (var i = 0; i < steps.length; i++) {
-            sum += steps[i];
-        }
-        console.log("Average steps " + sum/steps.length);
-        var min = Math.min.apply(null, steps),
-            max = Math.max.apply(null, steps);
-        console.log("max: " + max);
-        console.log("min: " + min);*/
-
     };
 }
 
