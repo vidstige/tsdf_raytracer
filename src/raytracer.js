@@ -6,8 +6,9 @@ var mat4 = glMatrix.mat4;
 
 var tsdf = require('./tsdf.js');
 
-function Camera() {
+function Camera(K) {
     var thiz = this;
+    this.K = K;
     this.pose = mat4.create();
 
     this.lookat = function(eye, center, up) {
@@ -50,23 +51,23 @@ function attachCamera(element, center, up, renderer) {
         if (!down) return;
         a += (down.x - e.x) / 100;
         updateCamera(camera, center, up, a);
-        renderer(camera.pose);
+        renderer(camera);
         return false;
     };
     updateCamera(camera, center, up, a);
-    renderer(camera.pose);
+    renderer(camera);
 }
 
 
-function autoSpin(center, up, renderer, a) {
+function autoSpin(K, center, up, renderer, a) {
     a = a || -Math.PI / 3;
     if (a > Math.PI / 3) {
         return;
     }
-    var camera = new Camera();
+    var camera = new Camera(K);
     updateCamera(camera, center, up, a);
-    renderer(camera.pose);
-    setTimeout(autoSpin, 10, center, up, renderer, a + 0.05);
+    renderer(camera);
+    setTimeout(autoSpin, 10, K, center, up, renderer, a + 0.05);
 }
 
 // Returns distance to surface at specified indices
@@ -279,13 +280,8 @@ function scaleCamera(K, oldSize, newSize) {
 
 var img;
 var depth;
-function render(tsdf, pose) {
-    var fx = 472, fy = 472;
-    var cx = 319.5, cy = 239.5;
-    var K = mat3.fromValues(fx, 0.0, cx, 0.0, fy, cy, 0.0, 0.0, 1.0);
-    var K = mat3.transpose(mat3.create(), K);
-    
-    var canvas = document.getElementById('canvas');
+function render(tsdf, camera) {
+        var canvas = document.getElementById('canvas');
     var ctx = canvas.getContext('2d');
 
     var render_size = vec2.fromValues(canvas.width, canvas.height);
@@ -294,7 +290,7 @@ function render(tsdf, pose) {
     }
 
     console.time("raytrace");
-    render_depth(tsdf, pose, scaleCamera(K, vec2.fromValues(640, 480), render_size), depth, render_size[0], render_size[1]);
+    render_depth(tsdf, camera.pose, scaleCamera(camera.K, vec2.fromValues(640, 480), render_size), depth, render_size[0], render_size[1]);
     console.timeEnd("raytrace");
 
     if (!img) {
