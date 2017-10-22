@@ -1,5 +1,6 @@
 # Ray Tracer in pure js
 
+![build status](https://travis-ci.org/vidstige/tsdf_raytracer.svg?branch=master)
 [![first-timers-friendly](http://img.shields.io/badge/first--timers--only-friendly-green.svg?style=flat&colorB=FF69B4)](http://www.firsttimersonly.com/)
 
 * Fast ray tracer in JavaScript. No WebGL and fancy stuff, just plain'ol JavaScript.
