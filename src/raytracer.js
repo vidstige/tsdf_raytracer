@@ -36,7 +36,7 @@ function updateCamera(camera, center, up, a) {
     camera.lookat(eye, center, up);
 }
 
-function attachCamera(element, center, up, renderer) {
+function attachCamera(element, center, up, render) {
     var a = 0;
     var pose = mat4.create();
 
@@ -51,25 +51,22 @@ function attachCamera(element, center, up, renderer) {
         if (!down) return;
         a += (down.x - e.x) / 100;
         updateCamera(camera, center, up, a);
-        renderer(camera);
+        render();
         return false;
     };
     updateCamera(camera, center, up, a);
-    renderer(camera);
+    render();
 }
 
-
-function autoSpin(K, center, up, renderer, a) {
+function autoSpin(camera, center, up, render, a) {
     a = a || -Math.PI / 3;
     if (a > Math.PI / 3) {
         return;
     }
-    var camera = new Camera(K);
     updateCamera(camera, center, up, a);
-    renderer(camera);
-    setTimeout(autoSpin, 10, K, center, up, renderer, a + 0.05);
+    render();
+    setTimeout(autoSpin, 10, camera, center, up, render, a + 0.05);
 }
-
 
 function Raytracer() {
     var cache;
@@ -212,13 +209,13 @@ function scaleCamera(K, oldSize, newSize) {
         K[6] * scale_x, K[7] * scale_y, 1.0);
 }
 
-function Renderer() {
+function Renderer(element, tsdf, camera) {
     var img;
     var depth;
     var raytracer = new Raytracer();
-    this.render = function(tsdf, camera) {
-        var canvas = document.getElementById('canvas');
-        var ctx = canvas.getContext('2d');
+
+    this.render = function() {
+        var ctx = element.getContext('2d');
 
         var render_size = vec2.fromValues(canvas.width, canvas.height);
         if (!depth) {
@@ -263,4 +260,4 @@ function Renderer() {
         // window.location.href = image; // it will save locally
     };
 }
-module.exports = {loadTsdf: tsdf.loadTsdf, autoSpin, Renderer};
+module.exports = {loadTsdf: tsdf.loadTsdf, autoSpin, Camera, Renderer};
