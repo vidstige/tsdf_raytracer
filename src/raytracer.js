@@ -70,74 +70,6 @@ function autoSpin(K, center, up, renderer, a) {
     setTimeout(autoSpin, 10, K, center, up, renderer, a + 0.05);
 }
 
-// Returns distance to surface at specified indices
-function distance_multiply(tsdf, indices)
-{
-    var index =
-        indices[2] * tsdf.resolution[1] * tsdf.resolution[0] +
-        indices[1] * tsdf.resolution[0] +
-        indices[0];
-    return tsdf.distances[index];
-}
-
-// Returns index in tsdf for given coordinate
-var tmp = vec3.create();
-function idx(tsdf, p)
-{
-    vec3.mul(tmp, p, tsdf.world_to_lattice);
-    return vec3.round(tmp, tmp);
-}
-
-// Returns whether specified coordinate is inside tsdf
-function inside(tsdf, p) {
-    return p[0] > 0 && p[0] < tsdf.size[0] &&
-        p[1] > 0 && p[1] < tsdf.size[1] &&
-        p[2] > 0 && p[2] < tsdf.size[2];
-}
-
-// Returns near intersection plane with the given line
-function intersect(tsdf, o, d)
-{
-    var min = vec3.fromValues(0, 0, 0);
-    var max = tsdf.size;
-    
-    var tmin = (min[0] - o[0]) / d[0];
-    var tmax = (max[0] - o[0]) / d[0];
-    if (tmin > tmax) {
-        var tmp = tmin;
-        tmin = tmax;
-        tmax = tmp;
-    }
-    var tymin = (min[1] - o[1]) / d[1];
-    var tymax = (max[1] - o[1]) / d[1];
-    if (tymin > tymax) {
-        var tmp = tymin;
-        tymin = tymax;
-        tymax = tmp;
-    }
-
-    if ((tmin > tymax) || (tymin > tmax)) return false;
-
-    if (tymin > tmin) tmin = tymin;
-    if (tymax < tmax) tmax = tymax;
-    var tzmin = (min[2] - o[2]) / d[2];
-    var tzmax = (max[2] - o[2]) / d[2];
-    if (tzmin > tzmax) {
-        var tmp = tzmin;
-        tzmin = tzmax;
-        tzmax = tmp;
-    }
-    
-    if ((tmin > tzmax) || (tzmin > tmax)) return false;
-    if (tzmin > tmin) tmin = tzmin;
-    //if (tzmax < tmax)
-    //    tmax = tzmax;
-    
-    near = tmin;
-
-    return {near: near};
-}
-
 var cache;
 function render_depth(tsdf, pose, K, depth, width, height)
 {
@@ -188,17 +120,17 @@ function render_depth(tsdf, pose, K, depth, width, height)
             var n = 0;
             vec3.transformMat3(d, cache[c], rotation);
             var p = vec3.clone(pose_translation);
-            var intersection = intersect(tsdf, p, d);
+            var intersection = tsdf.intersect(p, d);
             if (intersection) {
                 var k = intersection.near;
                 var dist = 0;
                 do {
                     k += Math.max(voxel_length, dist);
                     vec3.scaleAndAdd(p, pose_translation, d, k);
-                    if (!inside(tsdf, p)) {
+                    if (!tsdf.inside(p)) {
                         break;
                     }
-                    dist = distance_multiply(tsdf, idx(tsdf, p));
+                    dist = tsdf.distance(tsdf.idx(p));
                     n++;
                 } while (dist > 0);
                 depth[c] = k;
