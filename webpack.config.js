@@ -1,7 +1,7 @@
 var path = require('path');
 
 module.exports = {
-  entry: './src/raytracer.js',
+  entry: './example/samuel.js',
   output: {
     filename: 'bundle.js',
     publicPath: '/dist/',
