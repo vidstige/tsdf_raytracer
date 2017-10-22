@@ -10,6 +10,7 @@
   },
   "author": "",
   "license": "ISC",
+  "repository": "git@github.com:vidstige/tsdf_raytracer.git",
   "dependencies": {
     "express": "^4.15.2",
     "gl-matrix": "^2.3.2"
