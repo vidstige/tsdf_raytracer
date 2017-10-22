@@ -26,9 +26,10 @@ function start_here() {
         var center = vec3.multiply(vec3.create(), tsdf.size, vec3.fromValues(0.5, 0.5, 0.5));
         var up = vec3.fromValues(0, 0, 1);
 
+        var renderer = new tsdf_raytracer.Renderer();
         //attachCamera(canvas, center, up, function(pose) { render(tsdf, pose); });
         console.log("autospin");
-        tsdf_raytracer.autoSpin(K(), center, up, function(camera) { tsdf_raytracer.render(tsdf, camera); });
+        tsdf_raytracer.autoSpin(K(), center, up, function(camera) { renderer.render(tsdf, camera); });
         
         window.onhashchange = function () {
             console.log(window.location.hash);

@@ -212,54 +212,55 @@ function scaleCamera(K, oldSize, newSize) {
         K[6] * scale_x, K[7] * scale_y, 1.0);
 }
 
-var img;
-var depth;
-var raytracer = new Raytracer();
-function render(tsdf, camera) {
+function Renderer() {
+    var img;
+    var depth;
+    var raytracer = new Raytracer();
+    this.render = function(tsdf, camera) {
         var canvas = document.getElementById('canvas');
-    var ctx = canvas.getContext('2d');
+        var ctx = canvas.getContext('2d');
 
-    var render_size = vec2.fromValues(canvas.width, canvas.height);
-    if (!depth) {
-        depth = new Float32Array(render_size[0] * render_size[1]);
-    }
+        var render_size = vec2.fromValues(canvas.width, canvas.height);
+        if (!depth) {
+            depth = new Float32Array(render_size[0] * render_size[1]);
+        }
 
-    console.time("raytrace");
-    raytracer.render_depth(tsdf, camera.pose, scaleCamera(camera.K, camera.K.resolution, render_size), depth, render_size[0], render_size[1]);
-    console.timeEnd("raytrace");
+        console.time("raytrace");
+        raytracer.render_depth(tsdf, camera.pose, scaleCamera(camera.K, camera.K.resolution, render_size), depth, render_size[0], render_size[1]);
+        console.timeEnd("raytrace");
 
-    if (!img) {
-        img = ctx.createImageData(render_size[0], render_size[1]);
-    }
-    var c = 0;
-    //var min = Math.min.apply(null, depth),
-    //    max = Math.max.apply(null, depth);
+        if (!img) {
+            img = ctx.createImageData(render_size[0], render_size[1]);
+        }
+        var c = 0;
+        //var min = Math.min.apply(null, depth),
+        //    max = Math.max.apply(null, depth);
 
-    //console.log(min, max);
-    var min = 0.25, max = 0.8;
+        //console.log(min, max);
+        var min = 0.25, max = 0.8;
 
-    // Scales normalized (0-1) depth to pixel value
-    function f(nm) {
-        var a = 0.1;
-        return 1 - (nm / (a+nm));
-    }
-    
-    for (var i = 0; i < img.width * img.height * 4; i += 4) {
-        var v = depth[c];
-        c++;
+        // Scales normalized (0-1) depth to pixel value
+        function f(nm) {
+            var a = 0.1;
+            return 1 - (nm / (a+nm));
+        }
         
-        img.data[i + 0] = 0;
-        img.data[i + 1] = 255 * f((v - min) / (max - min));
-        img.data[i + 2] = 255 * f((v - min) / (max - min));
-        img.data[i + 3] = 0xff;
-    }
+        for (var i = 0; i < img.width * img.height * 4; i += 4) {
+            var v = depth[c];
+            c++;
+            
+            img.data[i + 0] = 0;
+            img.data[i + 1] = 255 * f((v - min) / (max - min));
+            img.data[i + 2] = 255 * f((v - min) / (max - min));
+            img.data[i + 3] = 0xff;
+        }
 
-    ctx.putImageData(img, 0, 0);
+        ctx.putImageData(img, 0, 0);
 
 
-    // Save png
-    // var image = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");  // here is the most important part because if you dont replace you will get a DOM 18 exception.
-    // window.location.href = image; // it will save locally
+        // Save png
+        // var image = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");  // here is the most important part because if you dont replace you will get a DOM 18 exception.
+        // window.location.href = image; // it will save locally
+    };
 }
-
-module.exports = {loadTsdf: tsdf.loadTsdf, autoSpin, render};
+module.exports = {loadTsdf: tsdf.loadTsdf, autoSpin, Renderer};
