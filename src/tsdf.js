@@ -23,7 +23,6 @@ function Tsdf(resolution, size, distances) {
         return tsdf.distances[index];
     };
 
-
     // Returns index in tsdf for given coordinate
     var tmp = vec3.create();
     this.idx = function(p) {

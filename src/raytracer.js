@@ -217,7 +217,7 @@ function Renderer(element, tsdf, camera) {
     this.render = function() {
         var ctx = element.getContext('2d');
 
-        var render_size = vec2.fromValues(canvas.width, canvas.height);
+        var render_size = vec2.fromValues(element.width, element.height);
         if (!depth) {
             depth = new Float32Array(render_size[0] * render_size[1]);
         }
@@ -256,7 +256,7 @@ function Renderer(element, tsdf, camera) {
 
 
         // Save png
-        // var image = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");  // here is the most important part because if you dont replace you will get a DOM 18 exception.
+        // var image = element.toDataURL("image/png").replace("image/png", "image/octet-stream");  // here is the most important part because if you dont replace you will get a DOM 18 exception.
         // window.location.href = image; // it will save locally
     };
 }
