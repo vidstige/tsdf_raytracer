@@ -6,43 +6,33 @@ var mat4 = glMatrix.mat4;
 
 var tsdf = require('./tsdf.js');
 
-// Look at - komb version
-function lookat(pose, eye, center, up) {
-      /*  using namespace Eigen;
-        Vector3f z = at - eye;
-        z.normalize();
-        Vector3f x = z.cross(up);
-        x.normalize();
-        Vector3f y = z.cross(x);
-        y.normalize();
-        
-        Matrix3f R;
-        R.col(0) = x;
-        R.col(1) = y;
-        R.col(2) = z;
-        
-        return Translation3f(eye) * R;*/
-    var z = vec3.sub(vec3.create(), center, eye);
-    vec3.normalize(z, z);
-    var x = vec3.cross(vec3.create(), z, up);
-    vec3.normalize(x, x);
-    var y = vec3.cross(vec3.create(), z, x);
-    vec3.normalize(y, y);
+function Camera() {
+    var thiz = this;
+    this.pose = mat4.create();
 
-    var R = mat4.fromValues(
-        x[0], x[1], x[2], 0,
-        y[0], y[1], y[2], 0,
-        z[0], z[1], z[2], 0,
-        0, 0, 0, 1);
-    var t = mat4.fromTranslation(mat4.create(), eye);
-    mat4.multiply(pose, t, R);
+    this.lookat = function(eye, center, up) {
+        var z = vec3.sub(vec3.create(), center, eye);
+        vec3.normalize(z, z);
+        var x = vec3.cross(vec3.create(), z, up);
+        vec3.normalize(x, x);
+        var y = vec3.cross(vec3.create(), z, x);
+        vec3.normalize(y, y);
+
+        var R = mat4.fromValues(
+            x[0], x[1], x[2], 0,
+            y[0], y[1], y[2], 0,
+            z[0], z[1], z[2], 0,
+            0, 0, 0, 1);
+        var t = mat4.fromTranslation(mat4.create(), eye);
+        mat4.multiply(thiz.pose, t, R);
+    }
 }
 
 // Camera stuff
-function updatePose(pose, center, up, a) {
+function updateCamera(camera, center, up, a) {
     var r = 0.4;
     var eye = vec3.fromValues(center[0] + Math.sin(a) * r, center[1] - Math.cos(a) * r, center[2]);
-    lookat(pose, eye, center, up);
+    camera.lookat(eye, center, up);
 }
 
 function attachCamera(element, center, up, renderer) {
@@ -59,12 +49,12 @@ function attachCamera(element, center, up, renderer) {
     element.onmousemove = function(e) {
         if (!down) return;
         a += (down.x - e.x) / 100;
-        updatePose(pose, center, up, a);
-        renderer(pose);
+        updateCamera(camera, center, up, a);
+        renderer(camera.pose);
         return false;
     };
-    updatePose(pose, center, up, a);
-    renderer(pose);
+    updateCamera(camera, center, up, a);
+    renderer(camera.pose);
 }
 
 
@@ -73,9 +63,9 @@ function autoSpin(center, up, renderer, a) {
     if (a > Math.PI / 3) {
         return;
     }
-    var pose = mat4.create();
-    updatePose(pose, center, up, a);
-    renderer(pose);
+    var camera = new Camera();
+    updateCamera(camera, center, up, a);
+    renderer(camera.pose);
     setTimeout(autoSpin, 10, center, up, renderer, a + 0.05);
 }
 
