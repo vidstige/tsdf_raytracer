@@ -125,25 +125,19 @@ function Raytracer() {
                         break;
                     }
                     dist = tsdf.distance(tsdf.idx(p));
-                    n++;
                 } while (dist > 0);
                 return k;
             }
             return 0;
         }
 
-        var c = 0;
         var d = vec3.create();
-        for (var y = 0; y < height; y++)
+        for (var c = 0; c < width*height; c++)
         {
-            for (var x = 0; x < width; x++)
-            {
-                var n = 0;
-                vec3.transformMat3(d, cache[c], rotation);
-                var p = vec3.clone(pose_translation);
-                depth[c] = trace(tsdf, p, d)
-                c++;
-            }
+            var n = 0;
+            vec3.transformMat3(d, cache[c], rotation);
+            var p = vec3.clone(pose_translation);
+            depth[c] = trace(tsdf, p, d)
         }
     };
 }
