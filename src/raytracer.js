@@ -36,20 +36,21 @@ function updateCamera(camera, center, up, a) {
     camera.lookat(eye, center, up);
 }
 
-function attachCamera(element, center, up, render) {
+function attachCamera(element, camera, center, up, render) {
     var a = 0;
-    var pose = mat4.create();
 
     var down = null;
+    var a0 = a;
     element.onmousedown = function(e) {
         down = e;
+        a0 = a;
     };
     element.onmouseup = function(e) {
         down = null;
     };
     element.onmousemove = function(e) {
         if (!down) return;
-        a += (down.x - e.x) / 100;
+        a = a0 + (down.x - e.x) / 100;
         updateCamera(camera, center, up, a);
         render();
         return false;
@@ -247,4 +248,4 @@ function Renderer(element, tsdf, camera) {
         // window.location.href = image; // it will save locally
     };
 }
-module.exports = {loadTsdf: tsdf.loadTsdf, autoSpin, Camera, Renderer};
+module.exports = {loadTsdf: tsdf.loadTsdf, autoSpin, attachCamera, Camera, Renderer};

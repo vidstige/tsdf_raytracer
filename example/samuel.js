@@ -28,9 +28,9 @@ function start_here() {
 
         var camera = new tsdf_raytracer.Camera(K());
         var renderer = new tsdf_raytracer.Renderer(canvas, tsdf, camera);
-        //attachCamera(canvas, center, up, function(pose) { render(tsdf, pose); });
-        console.log("autospin");
-        tsdf_raytracer.autoSpin(camera, center, up, renderer.render);
+        tsdf_raytracer.attachCamera(canvas, camera, center, up, renderer.render);
+        //console.log("autospin");
+        //tsdf_raytracer.autoSpin(camera, center, up, renderer.render);
         
         window.onhashchange = function () {
             console.log(window.location.hash);
