@@ -202,11 +202,16 @@ function Renderer(element, tsdf, camera) {
     var depth;
     var raytracer = new Raytracer();
 
+    var backbuffer = document.createElement('canvas');
+    backbuffer.setAttribute('width', 160);
+    backbuffer.setAttribute('height', 100);
+
     this.render = function() {
         var ctx = element.getContext('2d');
 
-        var render_size = vec2.fromValues(element.width, element.height);
+        var render_size = vec2.fromValues(backbuffer.width, backbuffer.height);
         if (!depth) {
+            console.log("Creating depth buffer");
             depth = new Float32Array(render_size[0] * render_size[1]);
         }
 
@@ -215,6 +220,7 @@ function Renderer(element, tsdf, camera) {
         console.timeEnd("raytrace");
 
         if (!img) {
+            console.log("Creating image data");
             img = ctx.createImageData(render_size[0], render_size[1]);
         }
         var c = 0;
@@ -240,7 +246,11 @@ function Renderer(element, tsdf, camera) {
             img.data[i + 3] = 0xff;
         }
 
-        ctx.putImageData(img, 0, 0);
+        backbuffer.getContext("2d").putImageData(img, 0, 0);
+
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.scale(4, 4);
+        ctx.drawImage(backbuffer, 0, 0);
 
 
         // Save png
